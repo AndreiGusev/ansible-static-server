@@ -1,0 +1,19 @@
+---
+# vhost / static serving. Override in group_vars/all/nginx.yml.
+nginx_server_name: "_"
+nginx_listen_port: 80
+
+nginx_web_root: /var/www/static
+nginx_images_dir: "{{ nginx_web_root }}/images"
+
+# Cache lifetime for served images (1 hour).
+nginx_cache_expires: "1h"
+
+# gzip only for text-based assets; jpeg/png/gif are already compressed.
+nginx_gzip_enabled: true
+nginx_gzip_types:
+  - text/plain
+  - text/css
+  - application/javascript
+  - application/json
+  - image/svg+xml

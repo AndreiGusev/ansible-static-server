@@ -1,0 +1,19 @@
+# SSH keys (generated locally, never commit private keys)
+keys/
+*.pem
+
+# Ansible artifacts
+*.retry
+*.log
+.ansible/
+fact_cache/
+
+# Downloaded static (fetched onto the server, kept out of the repo)
+roles/static/files/
+
+# OS / editor noise
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/

@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  role_name: nginx
+  author: andreigusev
+  description: Install nginx and serve the image collection at /images
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+dependencies: []

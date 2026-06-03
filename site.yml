@@ -1,0 +1,24 @@
+---
+# Main playbook: configure the static-serving server end to end.
+# Role order matters:
+#   common -> users -> zsh -> ssh -> nginx -> static
+# ssh hardening runs after users so we never lock ourselves out (we connect as
+# the deploy bootstrap user, which keeps working after root login is disabled).
+- name: Configure static file server
+  hosts: static_servers
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: common
+      tags: [common, packages]
+    - role: users
+      tags: [users]
+    - role: zsh
+      tags: [zsh]
+    - role: ssh
+      tags: [ssh, hardening]
+    - role: nginx
+      tags: [nginx]
+    - role: static
+      tags: [static]

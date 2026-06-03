@@ -1,0 +1,74 @@
+---
+- name: Install archive extraction tools
+  ansible.builtin.apt:
+    name:
+      - unzip
+      - tar
+      - file   # used to detect the downloaded archive's MIME type
+    state: present
+
+- name: Ensure images directory exists
+  ansible.builtin.file:
+    path: "{{ static_target_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Check whether the collection was already extracted
+  ansible.builtin.stat:
+    path: "{{ static_target_dir }}/.extracted"
+  register: static_marker
+
+# Everything below runs only on the first deploy. Guarding the whole block on
+# the marker keeps the role idempotent and lets us delete the archive afterwards
+# without it being re-downloaded on every run.
+- name: Download and deploy the image collection
+  when: not static_marker.stat.exists
+  block:
+    - name: Download static archive
+      ansible.builtin.get_url:
+        url: "{{ static_archive_url }}"
+        dest: "{{ static_archive_dest }}"
+        mode: "0644"
+        timeout: 60
+      register: static_download
+      # Google Drive can be flaky; retry a couple of times.
+      retries: 3
+      delay: 5
+      until: static_download is succeeded
+
+    - name: Detect archive type
+      ansible.builtin.command: "file --brief --mime-type {{ static_archive_dest }}"
+      register: static_archive_type
+      changed_when: false
+
+    - name: Fail early if the download is not an archive
+      ansible.builtin.assert:
+        that:
+          - "'zip' in static_archive_type.stdout or 'tar' in static_archive_type.stdout or 'gzip' in static_archive_type.stdout"
+        fail_msg: >-
+          Downloaded file is '{{ static_archive_type.stdout }}', not an archive.
+          Google Drive likely returned an HTML interstitial. See README for the
+          manual fallback (download locally and copy into {{ static_target_dir }}).
+
+    - name: Extract the archive into the images directory
+      ansible.builtin.unarchive:
+        src: "{{ static_archive_dest }}"
+        dest: "{{ static_target_dir }}"
+        remote_src: true
+        owner: www-data
+        group: www-data
+
+    - name: Remove the downloaded archive
+      ansible.builtin.file:
+        path: "{{ static_archive_dest }}"
+        state: absent
+
+    - name: Mark extraction as done
+      ansible.builtin.copy:
+        content: "extracted from {{ static_archive_url }}\n"
+        dest: "{{ static_target_dir }}/.extracted"
+        owner: www-data
+        group: www-data
+        mode: "0644"

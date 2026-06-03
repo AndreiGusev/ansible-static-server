@@ -1,0 +1,16 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade installed packages
+  ansible.builtin.apt:
+    # Default is 'safe' - it won't remove packages the way a dist-upgrade can.
+    upgrade: "{{ common_upgrade_type }}"
+  when: common_upgrade_packages | bool
+
+- name: Install extra utilities
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present

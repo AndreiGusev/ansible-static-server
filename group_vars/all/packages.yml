@@ -1,0 +1,13 @@
+---
+# Whether to upgrade packages during the common role, and how.
+# Upgrade mode: safe | full | dist | yes. 'safe' avoids removing packages.
+common_upgrade_packages: true
+common_upgrade_type: safe
+
+# Extra utilities to install. Extend this list freely - the common role
+# installs every entry in a single idempotent apt task.
+common_packages:
+  - htop
+  - ncdu
+  - git
+  - nano

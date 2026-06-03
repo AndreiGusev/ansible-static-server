@@ -1,0 +1,42 @@
+---
+- name: Build list of users whose login shell is zsh
+  ansible.builtin.set_fact:
+    zsh_users: >-
+      {{
+        users | default([])
+        | selectattr('state', 'defined') | selectattr('state', 'equalto', 'present')
+        | selectattr('shell', 'defined')
+        | selectattr('shell', 'search', 'zsh')
+        | list
+      }}
+
+- name: Install zsh
+  ansible.builtin.apt:
+    name: zsh
+    state: present
+  when: zsh_users | length > 0
+
+- name: Install oh-my-zsh for zsh users
+  ansible.builtin.git:
+    repo: https://github.com/ohmyzsh/ohmyzsh.git
+    dest: "/home/{{ item.name }}/.oh-my-zsh"
+    depth: 1
+    version: master
+    # Idempotent: don't re-clone / update on every run.
+    update: false
+  become: true
+  become_user: "{{ item.name }}"
+  loop: "{{ zsh_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Deploy .zshrc for zsh users
+  ansible.builtin.template:
+    src: zshrc.j2
+    dest: "/home/{{ item.name }}/.zshrc"
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: "0644"
+  loop: "{{ zsh_users }}"
+  loop_control:
+    label: "{{ item.name }}"

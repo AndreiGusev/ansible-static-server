@@ -1,0 +1,45 @@
+# {{ ansible_managed }}
+server {
+    listen {{ nginx_listen_port }} default_server;
+    listen [::]:{{ nginx_listen_port }} default_server;
+
+    server_name {{ nginx_server_name }};
+
+    # Don't advertise the nginx version in responses / error pages.
+    server_tokens off;
+
+    # Per-vhost request logging (task requirement).
+    access_log /var/log/nginx/static_access.log;
+    error_log  /var/log/nginx/static_error.log;
+
+    # gzip compression for compressible static assets (task requirement).
+    # jpeg/png/gif are already compressed, so only text-based types are listed.
+{% if nginx_gzip_enabled | bool %}
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_min_length 256;
+    gzip_types {{ nginx_gzip_types | join(' ') }};
+{% else %}
+    gzip off;
+{% endif %}
+
+    # Serve images at /images:
+    #   /images           -> directory listing (autoindex)
+    #   /images/<file>    -> the image file itself
+    location /images {
+        alias {{ nginx_images_dir }};
+
+        autoindex on;
+        autoindex_exact_size off;
+        autoindex_localtime on;
+
+        # Cache served images for 1 hour (task requirement).
+        expires {{ nginx_cache_expires }};
+        add_header Cache-Control "public";
+    }
+
+    location / {
+        return 302 /images/;
+    }
+}

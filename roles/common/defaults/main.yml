@@ -1,0 +1,10 @@
+---
+# Overridable in group_vars/all/packages.yml.
+common_upgrade_packages: true
+# apt upgrade mode: safe | full | dist | yes. 'safe' never removes packages.
+common_upgrade_type: safe
+common_packages:
+  - htop
+  - ncdu
+  - git
+  - nano

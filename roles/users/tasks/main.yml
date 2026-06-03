@@ -1,0 +1,34 @@
+---
+- name: Ensure custom groups exist
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ custom_groups | default([]) }}"
+
+- name: Manage users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    shell: "{{ item.shell | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
+    password: "{{ item.password | default(omit) }}"
+    groups: "{{ item.groups | default(omit) }}"
+    append: "{{ true if item.groups is defined else omit }}"
+    create_home: true
+    # When removing a user, also remove their home directory.
+    remove: "{{ true if (item.state | default('present')) == 'absent' else omit }}"
+  loop: "{{ users | default([]) }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.state | default('present') }})"
+
+- name: Install SSH authorized keys for present users
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_key }}"
+    state: present
+  loop: "{{ users | default([]) }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - (item.state | default('present')) == 'present'
+    - item.ssh_key is defined
+    - item.ssh_key | length > 0

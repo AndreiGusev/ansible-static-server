@@ -1,0 +1,12 @@
+---
+# Where to extract the images. Falls back to the nginx web root so the role
+# stays usable on its own, but in the playbook it lines up with what nginx serves.
+static_target_dir: "{{ nginx_images_dir | default('/var/www/static/images') }}"
+
+# Temp location for the downloaded archive on the server.
+static_archive_dest: /tmp/static_images_archive
+
+# Image collection from the task (Google Drive). The confirm=t form skips the
+# "can't scan for viruses" interstitial for larger files.
+static_gdrive_file_id: "1L9hsq9ZFB5VbXYJ3kEKH47x9nhxxZEnI"
+static_archive_url: "https://drive.usercontent.google.com/download?id={{ static_gdrive_file_id }}&export=download&confirm=t"

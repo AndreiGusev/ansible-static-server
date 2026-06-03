@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# SSH hardening (task requirements). Values come from role vars/defaults.
+PermitRootLogin {{ ssh_permit_root_login }}
+PermitEmptyPasswords {{ ssh_permit_empty_passwords }}
+LogLevel {{ ssh_log_level }}
+X11Forwarding {{ ssh_x11_forwarding }}

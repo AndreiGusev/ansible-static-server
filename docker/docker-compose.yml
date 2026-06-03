@@ -1,0 +1,16 @@
+---
+# Test environment for the Ansible playbook.
+# Run from the repo root:  docker compose -f docker/docker-compose.yml up -d --build
+services:
+  static-server:
+    build:
+      # Build context is the repo root so the Dockerfile can COPY keys/ and docker/.
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ansible-static-server:ubuntu24.04
+    container_name: static-server
+    hostname: static-server
+    ports:
+      - "2222:22"   # SSH for Ansible (host 2222 -> container 22)
+      - "8080:80"   # nginx static (host 8080 -> container 80)
+    restart: unless-stopped

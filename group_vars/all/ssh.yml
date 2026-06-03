@@ -1,0 +1,6 @@
+---
+# sshd hardening (consumed by the ssh role). Override the defaults here.
+ssh_permit_root_login: "no"        # disable root SSH login
+ssh_permit_empty_passwords: "no"   # reject empty passwords
+ssh_log_level: "VERBOSE"           # verbose auth logging
+ssh_x11_forwarding: "no"           # disable X11 forwarding

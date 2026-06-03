@@ -1,0 +1,5 @@
+---
+# Safe empty defaults so the role never fails if no data is supplied.
+# Real values live in group_vars/all/users.yml.
+custom_groups: []
+users: []

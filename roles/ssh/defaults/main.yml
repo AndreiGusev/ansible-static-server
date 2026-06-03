@@ -1,0 +1,6 @@
+---
+# sshd hardening settings (override in group_vars if needed).
+ssh_permit_root_login: "no"
+ssh_permit_empty_passwords: "no"
+ssh_log_level: "VERBOSE"
+ssh_x11_forwarding: "no"

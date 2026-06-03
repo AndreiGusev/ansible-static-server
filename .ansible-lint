@@ -1,0 +1,13 @@
+---
+profile: production
+
+exclude_paths:
+  - keys/
+  - roles/static/files/
+  - .github/
+
+skip_list:
+  - var-naming[no-role-prefix]  # vars are shared across roles by design
+
+warn_list:
+  - experimental

@@ -1,0 +1,8 @@
+---
+# Reads the shared users list; defaults to empty when run standalone.
+users: []
+
+# oh-my-zsh appearance / plugins baked into the generated .zshrc.
+zsh_theme: robbyrussell
+zsh_plugins:
+  - git

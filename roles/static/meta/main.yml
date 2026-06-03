@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  role_name: static
+  author: andreigusev
+  description: Download and deploy the static image collection
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+dependencies: []

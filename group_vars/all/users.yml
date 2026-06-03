@@ -1,0 +1,43 @@
+---
+# Custom groups to create on the host (managed by the users role).
+# Add/remove entries here - they are created idempotently.
+custom_groups:
+  - developers
+  - webadmins
+
+# Users to manage. Each user supports:
+#   name      - login name
+#   shell     - login shell (/bin/bash, /bin/zsh, ...). Users with a zsh shell
+#               also get oh-my-zsh installed by the zsh role.
+#   state     - present (create) or absent (remove)
+#   password  - SHA-512 crypt hash (NOT plaintext). Generate with:
+#                 openssl passwd -6 'YourPassword'
+#               Optional; omit to leave password unset. For real deployments
+#               keep the hashes in an ansible-vault encrypted file.
+#   groups    - supplementary groups (custom or system, e.g. sudo)
+#   ssh_key   - public key string for SSH login. Optional.
+users:
+  - name: alice
+    shell: /bin/zsh
+    state: present
+    # Example SHA-512 hash (demo data - replace and vault-encrypt for real use).
+    password: "$6$abcdefghijklmnop$oFU2ovODJnKw.YzNOT6ZPg.njtqwVjNkMwR7TPguE7hIXKkjnnbeZsyHE1UF2o9Wpm.AAno1nGS4mkMe/Fu7t1"
+    groups:
+      - developers
+      - sudo
+    # Reuse the generated test keypair so alice can actually log in for a demo.
+    ssh_key: "{{ lookup('file', playbook_dir + '/keys/id_ansible.pub') }}"
+
+  - name: bob
+    shell: /bin/bash
+    state: present
+    # Example SHA-512 hash (demo data - replace and vault-encrypt for real use).
+    password: "$6$qrstuvwxyz123456$GogBepGxvXx3drJ50U5SQbP2.v76ChojzqHlKlt5SQcW8MleOAjSIKCdLNSUoCHrCpMHFL//ANjugn8Ab1goK/"
+    groups:
+      - webadmins
+    # Replace with a real public key for production use.
+    ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyForBobReplaceMeWithARealOne bob@example.com"
+
+  # Demonstrates removal: this account is ensured ABSENT (idempotent).
+  - name: olduser
+    state: absent

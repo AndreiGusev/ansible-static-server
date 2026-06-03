@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  role_name: common
+  author: andreigusev
+  description: Base setup - package updates and common CLI utilities
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+dependencies: []
