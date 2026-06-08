@@ -15,60 +15,39 @@
     group: www-data
     mode: "0755"
 
-- name: Check whether the collection was already extracted
-  ansible.builtin.stat:
-    path: "{{ static_target_dir }}/.extracted"
-  register: static_marker
+# Re-fetch the archive (force) and keep it as a local cache. get_url only
+# reports 'changed' when the downloaded content differs from the cached copy,
+# which then notifies the extract handler. So a new/updated upstream archive is
+# re-extracted, while unchanged runs stay idempotent (changed=0).
+- name: Download static archive
+  ansible.builtin.get_url:
+    url: "{{ static_archive_url }}"
+    dest: "{{ static_archive_dest }}"
+    mode: "0644"
+    force: "{{ static_force_download | bool }}"
+    timeout: 60
+  register: static_download
+  # Google Drive can be flaky; retry a couple of times.
+  retries: 3
+  delay: 5
+  until: static_download is succeeded
+  notify: Extract static archive
 
-# Everything below runs only on the first deploy. Guarding the whole block on
-# the marker keeps the role idempotent and lets us delete the archive afterwards
-# without it being re-downloaded on every run.
-- name: Download and deploy the image collection
-  when: not static_marker.stat.exists
-  block:
-    - name: Download static archive
-      ansible.builtin.get_url:
-        url: "{{ static_archive_url }}"
-        dest: "{{ static_archive_dest }}"
-        mode: "0644"
-        timeout: 60
-      register: static_download
-      # Google Drive can be flaky; retry a couple of times.
-      retries: 3
-      delay: 5
-      until: static_download is succeeded
+- name: Detect archive type
+  ansible.builtin.command: "file --brief --mime-type {{ static_archive_dest }}"
+  register: static_archive_type
+  changed_when: false
 
-    - name: Detect archive type
-      ansible.builtin.command: "file --brief --mime-type {{ static_archive_dest }}"
-      register: static_archive_type
-      changed_when: false
+- name: Fail early if the download is not an archive
+  ansible.builtin.assert:
+    that:
+      - "'zip' in static_archive_type.stdout or 'tar' in static_archive_type.stdout or 'gzip' in static_archive_type.stdout"
+    fail_msg: >-
+      Downloaded file is '{{ static_archive_type.stdout }}', not an archive.
+      Google Drive likely returned an HTML interstitial. See README for the
+      manual fallback (download locally and copy into {{ static_target_dir }}).
 
-    - name: Fail early if the download is not an archive
-      ansible.builtin.assert:
-        that:
-          - "'zip' in static_archive_type.stdout or 'tar' in static_archive_type.stdout or 'gzip' in static_archive_type.stdout"
-        fail_msg: >-
-          Downloaded file is '{{ static_archive_type.stdout }}', not an archive.
-          Google Drive likely returned an HTML interstitial. See README for the
-          manual fallback (download locally and copy into {{ static_target_dir }}).
-
-    - name: Extract the archive into the images directory
-      ansible.builtin.unarchive:
-        src: "{{ static_archive_dest }}"
-        dest: "{{ static_target_dir }}"
-        remote_src: true
-        owner: www-data
-        group: www-data
-
-    - name: Remove the downloaded archive
-      ansible.builtin.file:
-        path: "{{ static_archive_dest }}"
-        state: absent
-
-    - name: Mark extraction as done
-      ansible.builtin.copy:
-        content: "extracted from {{ static_archive_url }}\n"
-        dest: "{{ static_target_dir }}/.extracted"
-        owner: www-data
-        group: www-data
-        mode: "0644"
+# Run the extract handler now (rather than at the end of the play) so the files
+# are in place as part of this role, and only after the assert above passed.
+- name: Extract the archive if it changed
+  ansible.builtin.meta: flush_handlers

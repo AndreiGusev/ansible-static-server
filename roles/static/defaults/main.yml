@@ -3,8 +3,15 @@
 # stays usable on its own, but in the playbook it lines up with what nginx serves.
 static_target_dir: "{{ nginx_images_dir | default('/var/www/static/images') }}"
 
-# Temp location for the downloaded archive on the server.
-static_archive_dest: /tmp/static_images_archive
+# Cached copy of the source archive. Kept (not deleted) so get_url can compare
+# against the upstream and re-extract only when the content actually changes.
+static_archive_dest: /var/cache/static-images-source
+
+# Re-fetch the archive on every run so upstream updates are picked up. get_url
+# only reports 'changed' when the content differs, and extraction is gated on
+# that - so adding images upstream is pulled in, unchanged runs stay changed=0.
+# Set to false to fetch only once (no automatic updates, less traffic).
+static_force_download: true
 
 # Image collection from the task (Google Drive). The confirm=t form skips the
 # "can't scan for viruses" interstitial for larger files.

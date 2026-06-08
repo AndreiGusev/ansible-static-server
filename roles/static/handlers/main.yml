@@ -1,0 +1,11 @@
+---
+# Triggered by get_url only when the archive content actually changed.
+# unarchive adds new files and overwrites changed ones, so updated upstream
+# archives are pulled in; files removed upstream are left untouched.
+- name: Extract static archive
+  ansible.builtin.unarchive:
+    src: "{{ static_archive_dest }}"
+    dest: "{{ static_target_dir }}"
+    remote_src: true
+    owner: www-data
+    group: www-data
